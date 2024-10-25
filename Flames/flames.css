@@ -1,0 +1,67 @@
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    height: 100vh;
+    margin: 0 auto;
+    background-color: aqua;
+}
+
+.Male-Name, .Female-Name, .count {
+    margin-bottom: 10px; /* Add space between divs */
+
+}
+
+.input {
+    width: 200px;
+    height: 50px; 
+    font-size: 20px; 
+    text-align: left; 
+    border-radius: 15px;
+    
+}
+
+.result {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+    gap: 10px;
+}
+
+.letter {
+    width: 40px;
+    height: 40px;
+    background-color: mediumvioletred;
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 50%;
+    font-size: 24px;
+    font-weight: bold;
+}
+.btn{
+    margin-top: 3rem;
+    padding: 15px;
+    border-radius: 20px;
+    width: 100px;
+    color:aquamarine;
+    background-color: blueviolet;
+}
+.highlight {
+    background-color: #FFD700; /* Gold color to highlight the result */
+}
+.eliminating {
+    opacity: 0.5;
+    text-decoration: line-through;
+}
+#Mname{
+    color: blue ;
+}
+#Fname{
+    color:violet;
+}
+#charec{
+    color: crimson;
+}
