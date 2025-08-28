@@ -1,96 +1,80 @@
-document.addEventListener('DOMContentLoaded', function() {
-    const maleInput = document.querySelector('.Male');
-    const femaleInput = document.querySelector('.Female');
-    const matchInput = document.querySelector('.Match');
-    const resultSpans = document.querySelectorAll('.letter');
-    const startButton = document.querySelector('.btn');
-    const eliminateSound = document.getElementById('eliminate-sound');
-    const resultSound = document.getElementById('result-sound');
-    const quoteContainer = document.createElement('div');
-    quoteContainer.classList.add('quote');
-    document.body.appendChild(quoteContainer);
-
-    startButton.addEventListener('click', calculateMatch);
-
-    function calculateMatch() {
-        const maleName = maleInput.value.toLowerCase().replace(/\s/g, '');
-        const femaleName = femaleInput.value.toLowerCase().replace(/\s/g, '');
-
-        let combinedNames = maleName + femaleName;
-        let uniqueChars = combinedNames.split('').filter(char => {
-            return !(maleName.includes(char) && femaleName.includes(char));
-        });
-
-        matchInput.value = uniqueChars.join(', ');
-
-        const count = uniqueChars.length;
-        playFlames(count);
-    }
-
-    function playFlames(count) {
-        const flames = ['F', 'L', 'A', 'M', 'E', 'S'];
-        let index = 0;
-        
-        function eliminateLetter() {
-            if (flames.length > 1) {
-                index = (index + count - 1) % flames.length;
-                
-                resultSpans.forEach(span => {
-                    if (span.textContent[0].toLowerCase() === flames[index].toLowerCase()) {
-                        span.classList.add('eliminating');
-                        eliminateSound.play();
-                        setTimeout(() => {
-                            span.classList.remove('eliminating');
-                            flames.splice(index, 1);
-                            eliminateLetter();
-                        }, 1000);
-                    }
-                });
-            } else {
-                const resultLetter = flames[0];
-                resultSound.play();
-                highlightResult(resultLetter);
-            }
+function highlightResult(letter) {
+    resultSpans.forEach(span => {
+        span.classList.remove('highlight');
+        span.textContent = span.textContent[0];
+        if (span.textContent.toLowerCase() === letter.toLowerCase()) {
+            span.classList.add('highlight');
+            span.textContent += getEmoji(letter);
         }
+    });
 
-        eliminateLetter();
-    }
+    // ✅ Get random quote
+    const randomQuote = displayQuote(letter);
 
-    function highlightResult(letter) {
-        resultSpans.forEach(span => {
-            span.classList.remove('highlight');
-            span.textContent = span.textContent[0]; // Remove any previous emoji
-            if (span.textContent.toLowerCase() === letter.toLowerCase()) {
-                span.classList.add('highlight');
-                span.textContent += getEmoji(letter);
-            }
-        });
-        displayQuote(letter);
-    }
+    // ✅ Save to database & also show backend response
+    saveResultToDB(letter, randomQuote);
+}
 
-    function displayQuote(letter) {
-        const quotes = {
-            'F': "A friend is someone who knows all about you and still loves you.",
-            'L': "Love is composed of a single soul inhabiting two bodies.",
-            'A': "Attraction is not an option.",
-            'M': "Marriage is the golden ring in a chain whose beginning is a glance and whose ending is Eternity.",
-            'E': "Enemies bring out the best in you, but they also bring out the worst in you.",
-            'S': "Siblings: children of the same parents, each of whom is perfectly normal until they get together."
-        };
+function displayQuote(letter) {
+    const quotes = {
+        'F': [
+            "A friend is someone who knows all about you and still loves you.",
+            "Good friends are like stars. You don’t always see them, but you know they’re always there.",
+            "Friendship is the only cement that will ever hold the world together."
+        ],
+        'L': [
+            "Love is composed of a single soul inhabiting two bodies.",
+            "To love and be loved is to feel the sun from both sides.",
+            "Love recognizes no barriers. It jumps hurdles, leaps fences, penetrates walls to arrive at its destination full of hope."
+        ],
+        'A': [
+            "Attraction is not an option.",
+            "You are what I need in my life.",
+            "Attraction starts with the eyes, but grows with the heart."
+        ],
+        'M': [
+            "Marriage is the golden ring in a chain whose beginning is a glance and whose ending is Eternity.",
+            "A successful marriage requires falling in love many times, always with the same person.",
+            "Marriage is not just spiritual communion, it is also remembering to take out the trash."
+        ],
+        'E': [
+            "Enemies bring out the best in you, but they also bring out the worst in you.",
+            "An enemy generally says and believes what he wishes.",
+            "Never explain — your friends do not need it, and your enemies will not believe it anyway."
+        ],
+        'S': [
+            "Siblings: children of the same parents, each of whom is perfectly normal until they get together.",
+            "Brothers and sisters are as close as hands and feet.",
+            "Having lots of siblings is like having built-in best friends."
+        ]
+    };
 
-        quoteContainer.textContent = quotes[letter] || "";
-        
-    }
+    const options = quotes[letter] || [];
+    const randomQuote = options.length > 0 ? options[Math.floor(Math.random() * options.length)] : "";
 
-    function getEmoji(letter) {
-        switch (letter) {
-            case 'F': return ' 😊'; // Friend
-            case 'L': return ' ❤️'; // Lovers
-            case 'A': return ' 💘'; // Attraction
-            case 'M': return ' 💍'; // Marriage
-            case 'E': return ' 😡'; // Enemy
-            case 'S': return ' 👯'; // Siblings
-            default: return '';
+    quoteContainer.textContent = randomQuote;
+    return randomQuote; // ✅ return so we can save in DB
+}
+
+function saveResultToDB(letter, quote) {
+    const maleName = document.querySelector('.Male').value;
+    const femaleName = document.querySelector('.Female').value;
+    const resultMap = { F: "Friend", L: "Lovers", A: "Attraction", M: "Marriage", E: "Enemy", S: "Siblings" };
+    const result = resultMap[letter] || "Unknown";
+
+    fetch("https://flames-backend-q251.onrender.com/api/flames", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ maleName, femaleName, result, quote })
+    })
+    .then(res => res.json())
+    .then(data => {
+        console.log("✅ Saved:", data);
+
+        // ✅ Update UI from backend response too
+        if (data.entry) {
+            quoteContainer.textContent = data.entry.quote;
         }
-    }
-});
+    })
+    .catch(err => console.error("❌ Error saving:", err));
+}
