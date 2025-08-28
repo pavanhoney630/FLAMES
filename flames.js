@@ -4,13 +4,17 @@ document.addEventListener("DOMContentLoaded", function () {
     const resultSpans = document.querySelectorAll(".letter");
     const startButton = document.querySelector(".btn");
 
-    // 🎯 Quote container
+    // 🎯 Create containers dynamically
+    window.resultContainer = document.createElement("div");
+    resultContainer.classList.add("final-result");
+    document.body.appendChild(resultContainer);
+
     window.quoteContainer = document.createElement("div");
     quoteContainer.classList.add("quote");
     document.body.appendChild(quoteContainer);
 
     // 🎯 Sound
-    const sound = new Audio("https://www.myinstants.com/media/sounds/ding-sound-effect_2.mp3"); // replace with your own mp3 if needed
+    const sound = new Audio("https://www.myinstants.com/media/sounds/ding-sound-effect_2.mp3");
 
     // ✅ Start button click handler
     startButton.addEventListener("click", function () {
@@ -26,14 +30,10 @@ document.addEventListener("DOMContentLoaded", function () {
         const cancelledResult = cancelCommonLetters(maleName, femaleName);
         const count = cancelledResult.remaining.length;
 
-        // Show cancelled process in console (or UI if you want)
-        console.log("✂ Cancelled:", cancelledResult.cancelled);
-        console.log("✨ Remaining letters:", cancelledResult.remaining.join(""));
-
         playFlames(count);
     });
 
-    // 🔥 Function to cancel common letters visually
+    // 🔥 Cancel common letters
     function cancelCommonLetters(male, female) {
         let maleArr = male.split("");
         let femaleArr = female.split("");
@@ -44,8 +44,8 @@ document.addEventListener("DOMContentLoaded", function () {
             const index = femaleArr.indexOf(char);
             if (index !== -1) {
                 cancelled.push(char);
-                maleArr[i] = ""; // remove from male
-                femaleArr[index] = ""; // remove from female
+                maleArr[i] = "";
+                femaleArr[index] = "";
             }
         }
 
@@ -80,13 +80,10 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         });
 
-        // 🔊 Play sound when result is highlighted
-        sound.play();
+        sound.play(); // 🔊 play result sound
 
-        // ✅ Get random quote
         const randomQuote = displayQuote(letter);
 
-        // ✅ Save result to backend
         saveResultToDB(letter, randomQuote);
     }
 
@@ -145,7 +142,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
-    // ✅ Save result to backend
+    // ✅ Save result to backend & show on UI
     function saveResultToDB(letter, quote) {
         const maleName = maleInput.value;
         const femaleName = femaleInput.value;
@@ -162,7 +159,11 @@ document.addEventListener("DOMContentLoaded", function () {
             console.log("✅ Saved:", data);
 
             if (data.entry) {
-                quoteContainer.textContent = data.entry.quote;
+                // 👇 Show result + quote in UI
+                resultContainer.innerHTML = `
+                    <h2>Result: ${data.entry.result} ${getEmoji(letter)}</h2>
+                `;
+                quoteContainer.innerHTML = `<p>"${data.entry.quote}"</p>`;
             }
         })
         .catch(err => console.error("❌ Error saving:", err));
