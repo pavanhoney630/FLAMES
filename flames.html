@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flames</title>
+    <link rel="stylesheet" type="text/css" href="./flames.css"/>
+</head>
+<body>
+    <div class="Male-Name">
+        <input type="text" class="Male input" id="Mname" placeholder="Enter Male Name">
+    </div>
+    <div class="Female-Name">
+        <input type="text" class="Female input" id="Fname" placeholder="Enter Female Name">
+    </div>
+    <div class="count">
+        <input type="text" class="Match input" readonly id="charec" placeholder="Result">
+    </div>
+    <div class="result">
+        <span id="Freind" class="letter" >F</span>
+        <span id="Lovers" class="letter">L</span>
+        <span id="Attraction" class="letter">A</span>
+        <span id="Marraige" class="letter">M</span>
+        <span id="Enemy" class="letter">E</span>
+        <span id="sister" class="letter">S</span>
+    </div>
+    <button class="btn">Start</button>
+    <audio id="eliminate-sound" src="./eliminate.mp3.mp3"></audio>
+<audio id="result-sound" src="Result.mp3.mp3"></audio>
+    <script src="./flames.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.3.3/dist/confetti.browser.min.js"></script>
+
+</body>
+</html>
