@@ -105,20 +105,27 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // ✅ Highlight result and play sound
     function highlightResult(letter) {
-        resultSpans.forEach(span => {
-            span.classList.remove("highlight");
-            span.textContent = span.textContent[0];
-            if (span.textContent.toLowerCase() === letter.toLowerCase()) {
-                span.classList.add("highlight");
-                span.textContent += getEmoji(letter);
-            }
-        });
+    resultSpans.forEach(span => {
+        span.classList.remove("highlight");
 
-        sound.play();
+        // Reset text to only the letter itself (no emoji)
+        const baseLetter = span.dataset.letter || span.textContent[0]; 
+        span.dataset.letter = baseLetter; // store original letter for future
 
-        const randomQuote = displayQuote(letter);
-        saveResultToDB(letter, randomQuote);
-    }
+        span.textContent = baseLetter;
+
+        if (baseLetter.toLowerCase() === letter.toLowerCase()) {
+            span.classList.add("highlight");
+            span.textContent += getEmoji(letter);
+        }
+    });
+
+    sound.play();
+
+    const randomQuote = displayQuote(letter);
+    saveResultToDB(letter, randomQuote);
+}
+
 
     // ✅ Random quotes
     function displayQuote(letter) {
