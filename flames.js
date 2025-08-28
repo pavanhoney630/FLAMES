@@ -5,6 +5,14 @@ document.addEventListener("DOMContentLoaded", function () {
     const startButton = document.querySelector(".btn");
 
     // 🎯 Create containers dynamically
+    window.cancelContainer = document.createElement("div");
+    cancelContainer.classList.add("cancel-process");
+    document.body.appendChild(cancelContainer);
+
+    window.uniqueContainer = document.createElement("div");
+    uniqueContainer.classList.add("unique-letters");
+    document.body.appendChild(uniqueContainer);
+
     window.resultContainer = document.createElement("div");
     resultContainer.classList.add("final-result");
     document.body.appendChild(resultContainer);
@@ -26,33 +34,59 @@ document.addEventListener("DOMContentLoaded", function () {
             return;
         }
 
-        // 🔥 Cancel out common letters
-        const cancelledResult = cancelCommonLetters(maleName, femaleName);
-        const count = cancelledResult.remaining.length;
+        // Reset UI
+        cancelContainer.innerHTML = `<h3>Cancelling Process:</h3><p></p>`;
+        uniqueContainer.innerHTML = "";
+        resultContainer.innerHTML = "";
+        quoteContainer.innerHTML = "";
 
-        playFlames(count);
+        // Run cancelling animation
+        cancelCommonLettersAnimated(maleName, femaleName);
     });
 
-    // 🔥 Cancel common letters
-    function cancelCommonLetters(male, female) {
+    // 🔥 Cancel common letters with animation
+    function cancelCommonLettersAnimated(male, female) {
         let maleArr = male.split("");
         let femaleArr = female.split("");
         let cancelled = [];
+        let cancelSteps = cancelContainer.querySelector("p");
 
-        for (let i = 0; i < maleArr.length; i++) {
+        let i = 0;
+        function step() {
+            if (i >= maleArr.length) {
+                // ✅ After cancelling, show remaining letters
+                const remaining = [...maleArr.filter(c => c !== ""), ...femaleArr.filter(c => c !== "")];
+                const uniqueLetters = remaining.join(", ");
+                uniqueContainer.innerHTML = `<h3>Remaining Unique Letters:</h3><p>${uniqueLetters}</p>`;
+
+                // Run FLAMES after cancelling is complete
+                playFlames(remaining.length);
+                return;
+            }
+
             const char = maleArr[i];
             const index = femaleArr.indexOf(char);
-            if (index !== -1) {
+
+            if (char && index !== -1) {
                 cancelled.push(char);
+
+                // animate strike-through
+                const span = document.createElement("span");
+                span.textContent = char;
+                span.style.textDecoration = "line-through";
+                span.style.color = "red";
+                span.style.marginRight = "5px";
+                cancelSteps.appendChild(span);
+
                 maleArr[i] = "";
                 femaleArr[index] = "";
             }
+
+            i++;
+            setTimeout(step, 500); // 0.5s delay per step
         }
 
-        return {
-            cancelled,
-            remaining: [...maleArr.filter(c => c !== ""), ...femaleArr.filter(c => c !== "")]
-        };
+        step();
     }
 
     // 🔥 Elimination process
@@ -73,17 +107,16 @@ document.addEventListener("DOMContentLoaded", function () {
     function highlightResult(letter) {
         resultSpans.forEach(span => {
             span.classList.remove("highlight");
-            span.textContent = span.textContent[0]; 
+            span.textContent = span.textContent[0];
             if (span.textContent.toLowerCase() === letter.toLowerCase()) {
                 span.classList.add("highlight");
                 span.textContent += getEmoji(letter);
             }
         });
 
-        sound.play(); // 🔊 play result sound
+        sound.play();
 
         const randomQuote = displayQuote(letter);
-
         saveResultToDB(letter, randomQuote);
     }
 
@@ -132,12 +165,12 @@ document.addEventListener("DOMContentLoaded", function () {
     // ✅ Emoji mapping
     function getEmoji(letter) {
         switch (letter) {
-            case "F": return " 😊"; 
-            case "L": return " ❤️"; 
-            case "A": return " 💘"; 
-            case "M": return " 💍"; 
-            case "E": return " 😡"; 
-            case "S": return " 👯"; 
+            case "F": return " 😊";
+            case "L": return " ❤️";
+            case "A": return " 💘";
+            case "M": return " 💍";
+            case "E": return " 😡";
+            case "S": return " 👯";
             default: return "";
         }
     }
@@ -154,18 +187,17 @@ document.addEventListener("DOMContentLoaded", function () {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ maleName, femaleName, result, quote })
         })
-        .then(res => res.json())
-        .then(data => {
-            console.log("✅ Saved:", data);
+            .then(res => res.json())
+            .then(data => {
+                console.log("✅ Saved:", data);
 
-            if (data.entry) {
-                // 👇 Show result + quote in UI
-                resultContainer.innerHTML = `
-                    <h2>Result: ${data.entry.result} ${getEmoji(letter)}</h2>
-                `;
-                quoteContainer.innerHTML = `<p>"${data.entry.quote}"</p>`;
-            }
-        })
-        .catch(err => console.error("❌ Error saving:", err));
+                if (data.entry) {
+                    resultContainer.innerHTML = `
+                        <h2>Result: ${data.entry.result} ${getEmoji(letter)}</h2>
+                    `;
+                    quoteContainer.innerHTML = `<p>"${data.entry.quote}"</p>`;
+                }
+            })
+            .catch(err => console.error("❌ Error saving:", err));
     }
 });
