@@ -5,19 +5,19 @@ document.addEventListener("DOMContentLoaded", function () {
     const startButton = document.querySelector(".btn");
 
     // 🎯 Create containers dynamically
-    window.cancelContainer = document.createElement("div");
+    const cancelContainer = document.createElement("div");
     cancelContainer.classList.add("cancel-process");
     document.body.appendChild(cancelContainer);
 
-    window.uniqueContainer = document.createElement("div");
+    const uniqueContainer = document.createElement("div");
     uniqueContainer.classList.add("unique-letters");
     document.body.appendChild(uniqueContainer);
 
-    window.resultContainer = document.createElement("div");
+    const resultContainer = document.createElement("div");
     resultContainer.classList.add("final-result");
     document.body.appendChild(resultContainer);
 
-    window.quoteContainer = document.createElement("div");
+    const quoteContainer = document.createElement("div");
     quoteContainer.classList.add("quote");
     document.body.appendChild(quoteContainer);
 
@@ -40,26 +40,22 @@ document.addEventListener("DOMContentLoaded", function () {
         resultContainer.innerHTML = "";
         quoteContainer.innerHTML = "";
 
-        // Run cancelling animation
         cancelCommonLettersAnimated(maleName, femaleName);
     });
 
-    // 🔥 Cancel common letters with animation
+    // 🔥 Cancel common letters with animation + sound
     function cancelCommonLettersAnimated(male, female) {
         let maleArr = male.split("");
         let femaleArr = female.split("");
-        let cancelled = [];
         let cancelSteps = cancelContainer.querySelector("p");
-
         let i = 0;
+
         function step() {
             if (i >= maleArr.length) {
-                // ✅ After cancelling, show remaining letters
                 const remaining = [...maleArr.filter(c => c !== ""), ...femaleArr.filter(c => c !== "")];
                 const uniqueLetters = remaining.join(", ");
                 uniqueContainer.innerHTML = `<h3>Remaining Unique Letters:</h3><p>${uniqueLetters}</p>`;
 
-                // Run FLAMES after cancelling is complete
                 playFlames(remaining.length);
                 return;
             }
@@ -68,28 +64,28 @@ document.addEventListener("DOMContentLoaded", function () {
             const index = femaleArr.indexOf(char);
 
             if (char && index !== -1) {
-                cancelled.push(char);
-
-                // animate strike-through
+                // Animate strike-through + sound
                 const span = document.createElement("span");
                 span.textContent = char;
                 span.style.textDecoration = "line-through";
                 span.style.color = "red";
                 span.style.marginRight = "5px";
+                span.style.transition = "all 0.3s ease";
                 cancelSteps.appendChild(span);
+                sound.play();
 
                 maleArr[i] = "";
                 femaleArr[index] = "";
             }
 
             i++;
-            setTimeout(step, 500); // 0.5s delay per step
+            setTimeout(step, 500);
         }
 
         step();
     }
 
-    // 🔥 Elimination process
+    // 🔥 FLAMES elimination
     function playFlames(count) {
         const flames = ["F", "L", "A", "M", "E", "S"];
         let index = 0;
@@ -103,75 +99,45 @@ document.addEventListener("DOMContentLoaded", function () {
         highlightResult(resultLetter);
     }
 
-    // ✅ Highlight result and play sound
+    // ✅ Highlight result with correct emoji
     function highlightResult(letter) {
-    resultSpans.forEach(span => {
-        span.classList.remove("highlight");
+        resultSpans.forEach(span => {
+            span.classList.remove("highlight");
+            const baseLetter = span.dataset.letter || span.textContent[0];
+            span.dataset.letter = baseLetter;
+            span.textContent = baseLetter;
 
-        // Reset text to only the letter itself (no emoji)
-        const baseLetter = span.dataset.letter || span.textContent[0]; 
-        span.dataset.letter = baseLetter; // store original letter for future
+            if (baseLetter.toUpperCase() === letter.toUpperCase()) {
+                span.classList.add("highlight");
+                span.textContent += getEmoji(baseLetter); // use baseLetter here
+            }
+        });
 
-        span.textContent = baseLetter;
+        sound.play();
 
-        if (baseLetter.toLowerCase() === letter.toLowerCase()) {
-            span.classList.add("highlight");
-            span.textContent += getEmoji(letter);
-        }
-    });
-
-    sound.play();
-
-    const randomQuote = displayQuote(letter);
-    saveResultToDB(letter, randomQuote);
-}
-
+        const randomQuote = displayQuote(letter);
+        saveResultToDB(letter, randomQuote);
+    }
 
     // ✅ Random quotes
     function displayQuote(letter) {
         const quotes = {
-            "F": [
-                "A friend is someone who knows all about you and still loves you.",
-                "Good friends are like stars. You don’t always see them, but you know they’re always there.",
-                "Friendship is the only cement that will ever hold the world together."
-            ],
-            "L": [
-                "Love is composed of a single soul inhabiting two bodies.",
-                "To love and be loved is to feel the sun from both sides.",
-                "Love recognizes no barriers. It jumps hurdles, leaps fences, penetrates walls to arrive at its destination full of hope."
-            ],
-            "A": [
-                "Attraction is not an option.",
-                "You are what I need in my life.",
-                "Attraction starts with the eyes, but grows with the heart."
-            ],
-            "M": [
-                "Marriage is the golden ring in a chain whose beginning is a glance and whose ending is Eternity.",
-                "A successful marriage requires falling in love many times, always with the same person.",
-                "Marriage is not just spiritual communion, it is also remembering to take out the trash."
-            ],
-            "E": [
-                "Enemies bring out the best in you, but they also bring out the worst in you.",
-                "An enemy generally says and believes what he wishes.",
-                "Never explain — your friends do not need it, and your enemies will not believe it anyway."
-            ],
-            "S": [
-                "Siblings: children of the same parents, each of whom is perfectly normal until they get together.",
-                "Brothers and sisters are as close as hands and feet.",
-                "Having lots of siblings is like having built-in best friends."
-            ]
+            "F": ["A friend is someone who knows all about you and still loves you."],
+            "L": ["Love is composed of a single soul inhabiting two bodies."],
+            "A": ["Attraction starts with the eyes, but grows with the heart."],
+            "M": ["A successful marriage requires falling in love many times, always with the same person."],
+            "E": ["Enemies bring out the best in you, but they also bring out the worst in you."],
+            "S": ["Siblings: children of the same parents, each of whom is perfectly normal until they get together."]
         };
-
         const options = quotes[letter] || [];
-        const randomQuote = options.length > 0 ? options[Math.floor(Math.random() * options.length)] : "";
-
+        const randomQuote = options[Math.floor(Math.random() * options.length)] || "";
         quoteContainer.textContent = randomQuote;
         return randomQuote;
     }
 
     // ✅ Emoji mapping
     function getEmoji(letter) {
-        switch (letter) {
+        switch (letter.toUpperCase()) {
             case "F": return " 😊";
             case "L": return " ❤️";
             case "A": return " 💘";
@@ -182,12 +148,12 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
-    // ✅ Save result to backend & show on UI
+    // ✅ Save result to backend & display
     function saveResultToDB(letter, quote) {
         const maleName = maleInput.value;
         const femaleName = femaleInput.value;
         const resultMap = { F: "Friend", L: "Lovers", A: "Attraction", M: "Marriage", E: "Enemy", S: "Siblings" };
-        const result = resultMap[letter] || "Unknown";
+        const result = resultMap[letter.toUpperCase()] || "Unknown";
 
         fetch("https://flames-backend-q251.onrender.com/api/flames", {
             method: "POST",
@@ -197,11 +163,8 @@ document.addEventListener("DOMContentLoaded", function () {
             .then(res => res.json())
             .then(data => {
                 console.log("✅ Saved:", data);
-
                 if (data.entry) {
-                    resultContainer.innerHTML = `
-                        <h2>Result: ${data.entry.result} ${getEmoji(letter)}</h2>
-                    `;
+                    resultContainer.innerHTML = `<h2>Result: ${data.entry.result} ${getEmoji(letter)}</h2>`;
                     quoteContainer.innerHTML = `<p>"${data.entry.quote}"</p>`;
                 }
             })
