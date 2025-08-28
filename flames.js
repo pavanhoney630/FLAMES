@@ -8,6 +8,9 @@ function highlightResult(letter) {
         }
     });
 
+    console.log("Male input:", document.querySelector('.Male'));
+console.log("Female input:", document.querySelector('.Female'));
+console.log("Start button:", document.querySelector('.btn'));
     // ✅ Get random quote
     const randomQuote = displayQuote(letter);
 
@@ -61,6 +64,10 @@ function saveResultToDB(letter, quote) {
     const femaleName = document.querySelector('.Female').value;
     const resultMap = { F: "Friend", L: "Lovers", A: "Attraction", M: "Marriage", E: "Enemy", S: "Siblings" };
     const result = resultMap[letter] || "Unknown";
+
+    console.log("Male input:", document.querySelector('.Male'));
+console.log("Female input:", document.querySelector('.Female'));
+console.log("Start button:", document.querySelector('.btn'));
 
     fetch("https://flames-backend-q251.onrender.com/api/flames", {
         method: "POST",
