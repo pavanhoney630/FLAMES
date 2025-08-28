@@ -149,25 +149,32 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     // ✅ Save result to backend & display
-    function saveResultToDB(letter, quote) {
-        const maleName = maleInput.value;
-        const femaleName = femaleInput.value;
-        const resultMap = { F: "Friend", L: "Lovers", A: "Attraction", M: "Marriage", E: "Enemy", S: "Siblings" };
-        const result = resultMap[letter.toUpperCase()] || "Unknown";
+    // ✅ Save result to backend & display
+function saveResultToDB(letter, quote) {
+    const maleName = maleInput.value;
+    const femaleName = femaleInput.value;
+    const resultMap = { F: "Friend", L: "Lovers", A: "Attraction", M: "Marriage", E: "Enemy", S: "Siblings" };
+    const emojiMap = { "Friend": "😊", "Lovers": "❤️", "Attraction": "💘", "Marriage": "💍", "Enemy": "😡", "Siblings": "👯" };
+    const result = resultMap[letter.toUpperCase()] || "Unknown";
+    const emoji = emojiMap[result] ? ` ${emojiMap[result]}` : "";
 
-        fetch("https://flames-backend-q251.onrender.com/api/flames", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ maleName, femaleName, result, quote })
-        })
-            .then(res => res.json())
-            .then(data => {
-                console.log("✅ Saved:", data);
-                if (data.entry) {
-                    resultContainer.innerHTML = `<h2>Result: ${data.entry.result} ${getEmoji(letter)}</h2>`;
-                    quoteContainer.innerHTML = `<p>"${data.entry.quote}"</p>`;
-                }
-            })
-            .catch(err => console.error("❌ Error saving:", err));
-    }
+    fetch("https://flames-backend-q251.onrender.com/api/flames", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ maleName, femaleName, result, quote })
+    })
+    .then(res => res.json())
+    .then(data => {
+        console.log("✅ Saved:", data);
+        if (data.entry) {
+            // Use the result string from backend + correct emoji
+            const resStr = data.entry.result;
+            resultContainer.innerHTML = `<h2>Result: ${resStr}${emoji}</h2>`;
+            quoteContainer.innerHTML = `<p>"${data.entry.quote}"</p>`;
+        }
+    })
+    .catch(err => console.error("❌ Error saving:", err));
+}
+
+    
 });
