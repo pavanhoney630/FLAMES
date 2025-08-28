@@ -56,7 +56,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 const uniqueLetters = remaining.join(", ");
                 uniqueContainer.innerHTML = `<h3>Remaining Unique Letters:</h3><p>${uniqueLetters}</p>`;
 
-                playFlames(remaining.length);
+                // ✅ Send remaining count to backend for final FLAMES result
+                saveResultToDB(remaining.length);
                 return;
             }
 
@@ -85,99 +86,47 @@ document.addEventListener("DOMContentLoaded", function () {
         step();
     }
 
-    // 🔥 FLAMES elimination
-    function playFlames(count) {
-        const flames = ["F", "L", "A", "M", "E", "S"];
-        let index = 0;
+    // ✅ Save result to backend & display (use backend result for both text & emoji)
+    function saveResultToDB(count) {
+        const maleName = maleInput.value;
+        const femaleName = femaleInput.value;
+        const quote = ""; // optional placeholder, backend can generate
 
-        while (flames.length > 1) {
-            index = (index + count - 1) % flames.length;
-            flames.splice(index, 1);
-        }
+        fetch("https://flames-backend-q251.onrender.com/api/flames", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ maleName, femaleName, count, quote })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.entry) {
+                const resultStr = data.entry.result; // backend result string
+                const emojiMap = {
+                    "Friend": "😊",
+                    "Lovers": "❤️",
+                    "Attraction": "💘",
+                    "Marriage": "💍",
+                    "Enemy": "😡",
+                    "Siblings": "👯"
+                };
+                const emoji = emojiMap[resultStr] || "";
 
-        const resultLetter = flames[0];
-        highlightResult(resultLetter);
-    }
+                // Highlight result letters based on backend result
+                resultSpans.forEach(span => {
+                    span.classList.remove("highlight");
+                    span.textContent = span.dataset.letter || span.textContent[0];
 
-    // ✅ Highlight result with correct emoji
-    function highlightResult(letter) {
-        resultSpans.forEach(span => {
-            span.classList.remove("highlight");
-            const baseLetter = span.dataset.letter || span.textContent[0];
-            span.dataset.letter = baseLetter;
-            span.textContent = baseLetter;
+                    if (span.textContent.toUpperCase() === resultStr[0].toUpperCase()) {
+                        span.classList.add("highlight");
+                        span.textContent += emoji;
+                    }
+                });
 
-            if (baseLetter.toUpperCase() === letter.toUpperCase()) {
-                span.classList.add("highlight");
-                span.textContent += getEmoji(baseLetter); // use baseLetter here
+                // Display final result + quote
+                resultContainer.innerHTML = `<h2>Result: ${resultStr} ${emoji}</h2>`;
+                quoteContainer.innerHTML = `<p>"${data.entry.quote}"</p>`;
             }
-        });
-
-        sound.play();
-
-        const randomQuote = displayQuote(letter);
-        saveResultToDB(letter, randomQuote);
+        })
+        .catch(err => console.error("❌ Error saving:", err));
     }
-
-    // ✅ Random quotes
-    function displayQuote(letter) {
-        const quotes = {
-            "F": ["A friend is someone who knows all about you and still loves you."],
-            "L": ["Love is composed of a single soul inhabiting two bodies."],
-            "A": ["Attraction starts with the eyes, but grows with the heart."],
-            "M": ["A successful marriage requires falling in love many times, always with the same person."],
-            "E": ["Enemies bring out the best in you, but they also bring out the worst in you."],
-            "S": ["Siblings: children of the same parents, each of whom is perfectly normal until they get together."]
-        };
-        const options = quotes[letter] || [];
-        const randomQuote = options[Math.floor(Math.random() * options.length)] || "";
-        quoteContainer.textContent = randomQuote;
-        return randomQuote;
-    }
-
-    // ✅ Emoji mapping
-    function getEmoji(letter) {
-        switch (letter.toUpperCase()) {
-            case "F": return " 😊";
-            case "L": return " ❤️";
-            case "A": return " 💘";
-            case "M": return " 💍";
-            case "E": return " 😡";
-            case "S": return " 👯";
-            default: return "";
-        }
-    }
- // ✅ Save result to backend & display
-function saveResultToDB(letter, quote) {
-    const maleName = maleInput.value;
-    const femaleName = femaleInput.value;
-
-    fetch("https://flames-backend-q251.onrender.com/api/flames", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ maleName, femaleName, result: letter, quote })
-    })
-    .then(res => res.json())
-    .then(data => {
-        console.log("✅ Saved:", data);
-        if (data.entry) {
-            const resultStr = data.entry.result; // backend result string
-            const emojiMap = {
-                "Friend": "😊",
-                "Lovers": "❤️",
-                "Attraction": "💘",
-                "Marriage": "💍",
-                "Enemy": "😡",
-                "Siblings": "👯"
-            };
-            const emoji = emojiMap[resultStr] || "";
-
-            resultContainer.innerHTML = `<h2>Result: ${resultStr} ${emoji}</h2>`;
-            quoteContainer.innerHTML = `<p>"${data.entry.quote}"</p>`;
-        }
-    })
-    .catch(err => console.error("❌ Error saving:", err));
-}
-
-    
 });
