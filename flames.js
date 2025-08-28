@@ -9,6 +9,9 @@ document.addEventListener("DOMContentLoaded", function () {
     quoteContainer.classList.add("quote");
     document.body.appendChild(quoteContainer);
 
+    // 🎯 Sound
+    const sound = new Audio("https://www.myinstants.com/media/sounds/ding-sound-effect_2.mp3"); // replace with your own mp3 if needed
+
     // ✅ Start button click handler
     startButton.addEventListener("click", function () {
         const maleName = maleInput.value.trim().toLowerCase().replace(/\s/g, "");
@@ -19,15 +22,38 @@ document.addEventListener("DOMContentLoaded", function () {
             return;
         }
 
-        // 🔥 Calculate FLAMES count
-        let combinedNames = maleName + femaleName;
-        let uniqueChars = combinedNames.split("").filter(char => {
-            return !(maleName.includes(char) && femaleName.includes(char));
-        });
-        const count = uniqueChars.length;
+        // 🔥 Cancel out common letters
+        const cancelledResult = cancelCommonLetters(maleName, femaleName);
+        const count = cancelledResult.remaining.length;
+
+        // Show cancelled process in console (or UI if you want)
+        console.log("✂ Cancelled:", cancelledResult.cancelled);
+        console.log("✨ Remaining letters:", cancelledResult.remaining.join(""));
 
         playFlames(count);
     });
+
+    // 🔥 Function to cancel common letters visually
+    function cancelCommonLetters(male, female) {
+        let maleArr = male.split("");
+        let femaleArr = female.split("");
+        let cancelled = [];
+
+        for (let i = 0; i < maleArr.length; i++) {
+            const char = maleArr[i];
+            const index = femaleArr.indexOf(char);
+            if (index !== -1) {
+                cancelled.push(char);
+                maleArr[i] = ""; // remove from male
+                femaleArr[index] = ""; // remove from female
+            }
+        }
+
+        return {
+            cancelled,
+            remaining: [...maleArr.filter(c => c !== ""), ...femaleArr.filter(c => c !== "")]
+        };
+    }
 
     // 🔥 Elimination process
     function playFlames(count) {
@@ -43,7 +69,7 @@ document.addEventListener("DOMContentLoaded", function () {
         highlightResult(resultLetter);
     }
 
-    // ✅ Highlight result and show emoji
+    // ✅ Highlight result and play sound
     function highlightResult(letter) {
         resultSpans.forEach(span => {
             span.classList.remove("highlight");
@@ -53,6 +79,9 @@ document.addEventListener("DOMContentLoaded", function () {
                 span.textContent += getEmoji(letter);
             }
         });
+
+        // 🔊 Play sound when result is highlighted
+        sound.play();
 
         // ✅ Get random quote
         const randomQuote = displayQuote(letter);
